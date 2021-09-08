@@ -16,6 +16,7 @@
 4. Atur mode upload data ke cloud (langsung kirim atau tunggu konfimasi)
 
 Opsional:
+
 - Bisa lihat kurvanya secara langsung (tanpa perlu post processing lagi ke spreadsheet).
 
 ## To Develop
