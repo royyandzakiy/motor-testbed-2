@@ -1,76 +1,90 @@
 #include "Sampler.h"
 
 Sampler sampler;
+TaskHandle_t samplingTaskHandle;
 
-// SAMPLER
-bool toSample = false;
-hw_timer_t* samplerTimer = NULL;
-portMUX_TYPE samplerMux = portMUX_INITIALIZER_UNLOCKED;
-
-#define RAW_SAMPLE_BUFFER_SIZE 100
-#define AVG_SAMPLE_BUFFER_SIZE 5
-
-uint16_t sampleBuffer[RAW_SAMPLE_BUFFER_SIZE];
-
-hw_timer_t* timer = NULL;
-portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
-
-volatile int interruptCounter;
-uint32_t totalInterruptCounter = 0;
-
-void IRAM_ATTR onTimer() {
-    portENTER_CRITICAL_ISR(&timerMux);
-    interruptCounter++;
-    portEXIT_CRITICAL_ISR(&timerMux);
-}
-
-void IRAM_ATTR sampleActivate() {
-    portENTER_CRITICAL_ISR(&samplerMux);
-    toSample = true;
-    portEXIT_CRITICAL_ISR(&samplerMux);
-}
-
-#define SAMPLING_INTERVAL_MILLIS 1000 // 1000000 micro seconds
+float* rawSampling();
+void sampling(void*);
 
 void Sampler::init() {
-    long intervalMillis = SAMPLING_INTERVAL_MILLIS;
-    timer = timerBegin(0, 80, true);
-    timerAttachInterrupt(timer, &onTimer, true);
-    timerAlarmWrite(timer, intervalMillis, true);
-    timerAlarmEnable(timer);
+    xTaskCreate(sampling, "sampling", 2048, NULL, 1, NULL);
 }
 
-void Sampler::samplerTask(void* pvParameters) {
-    if (toSample) {
-        Serial.print("An interrupt as occurred.");
+#define LOADCELL_AMOUNT 4
+uint16_t adcRead[LOADCELL_AMOUNT];
+unsigned int rawSampleCount = 0;
 
-        portENTER_CRITICAL(&samplerMux);
-        toSample = false;
-        portEXIT_CRITICAL(&samplerMux);
+const unsigned long rawSampleCountMax = 6000;
+const unsigned long rawSampleInterval = 0;       // interval from each raw sampling (in microseconds). need to create dynamically, count total sample count, reduce by estimated sisa waktu. default is 0
+const unsigned long rawSampleTimeMax = 1000000;  // max raw sampling time is 1 second (in microseconds)
 
-        // sampler logic here
-        // ...
+float* Sampler::rawSampling() {
+    unsigned long start = micros();
+    bool stopSampling;
 
-        // savingTask start
-        // xTaskCreate(savingTask, "savingTask", 2048, NULL, 1, NULL);
-    }
-}
+    while (1) {
+        stopSampling = rawSampleCount >= rawSampleCountMax;  // stop based on buffer size
+        // stopSampling = micros() - start > rawSampleTimeMax; // stop based on time
+        // stopSampling = rawSampleCount >= rawSampleCountMax || micros() - start > rawSampleTimeMax; // stop based on buffer size and time
 
-void Sampler::poll() {
-    if (interruptCounter > 0) {
-        if (totalInterruptCounter % 100 == 0) {
-            Serial.print("An interrupt as occurred. Total number: ");
-            Serial.print(totalInterruptCounter);
-            Serial.print("; Interrupt Counter: ");
-            Serial.println(interruptCounter);
+        if (stopSampling) {
+            break;
         }
-        portENTER_CRITICAL(&timerMux);
-        interruptCounter--;
-        portEXIT_CRITICAL(&timerMux);
 
-        if (totalInterruptCounter < 2000000)
-            totalInterruptCounter++;
-        else
-            totalInterruptCounter = 0;
+        adcRead[0] += adc1_get_raw(ADC1_CHANNEL_4);
+        adcRead[1] += adc1_get_raw(ADC1_CHANNEL_5);
+        adcRead[2] += adc1_get_raw(ADC1_CHANNEL_6);
+        adcRead[3] += adc1_get_raw(ADC1_CHANNEL_7);
+
+        delayMicroseconds(rawSampleInterval);
+        rawSampleCount++;
     }
+
+    float* avgSample = (float*)malloc(sizeof(float) * LOADCELL_AMOUNT);
+
+    for (int i = 0; i < 4; i++) {
+        avgSample[i] = (float)(adcRead[i] / rawSampleCount);
+    }
+
+    _PF("rawSampleCount: %d\n", rawSampleCount);
+    _PF("time elapsed: %lu\n", micros() - start);
+
+    return avgSample;
+}
+
+unsigned int avgSampleCount = 0;
+
+const unsigned int avgSampleCountMax = 50;         // is "buffer size"
+const unsigned long avgSampleInterval = 500000;   // in microseconds
+const unsigned long avgSampleTimeMax = 10000000;  // an alternative to not stop by buffer size, but time (in microseconds)
+
+// ROY: START HERE, perbaiki sampling
+void samplingTask(void* pvParameters) {
+    bool stopSampling;
+    unsigned long start = micros();
+
+    for (;;) {
+        stopSampling = avgSampleCount >= avgSampleCountMax;  // stop based on buffer size
+        // stopSampling = micros() - start > avgSampleTimeMax; // stop based on time
+        // stopSampling = avgSampleCount >= avgSampleCountMax || micros() - start > avgSampleTimeMax; // stop based on buffer size & time
+
+        if (stopSampling) {
+            break;
+        }
+
+        float* avgSample;
+        avgSample = sampler.rawSampling();
+
+        avgSampleCount++;
+        
+        _PF("sampling count: %d\n", avgSampleCount);
+        for (int i = 0; i < LOADCELL_AMOUNT; i++) {
+            _PF("average adcRead[%d]: %.2f\n", i, avgSample[i]);
+        }
+        delayMicroseconds(avgSampleInterval);
+    }
+
+    _PF("avgSampleCount: %d\n", avgSampleCount);
+    _PF("time elapsed: %lu\n", micros() - start);
+    vTaskDelete(NULL);
 }

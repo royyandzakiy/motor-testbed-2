@@ -14,16 +14,16 @@ void Command::process(const String _command) {
 
         deviceConfig.sampling.rawSampleInterval = interval;
         _PF("deviceConfig.sampling.rawSampleInterval: %lu", deviceConfig.sampling.rawSampleInterval);
-    }
-    else if (_command.substring(0, _command.indexOf(':')) == "start") {
+    } else if (_command.substring(0, _command.indexOf(':')) == "start") {
         _PN("Sampling process start");
         // startsampling
-    }
-    else if (_command.substring(0, _command.indexOf(':')) == "stop") {
+
+        xTaskCreate(samplingTask, "samplingTask", 2048, NULL, 1, &samplingTaskHandle);
+    } else if (_command.substring(0, _command.indexOf(':')) == "stop") {
         _PN("Sampling process stopped");
         // stop sampling
 
-        // sampler.init();
+        vTaskDelete(samplingTaskHandle);
     }
 }
 

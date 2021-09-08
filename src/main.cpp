@@ -5,6 +5,8 @@
 #include "Sampler.h"
 #include "esp_task_wdt.h"
 
+TaskHandle_t commandTaskHandle;
+
 // DATA SAVER
 bool toSave = false, toUpload = false;
 
@@ -44,12 +46,12 @@ void commandTask(void* pvParameters) {
 // MAIN
 void setup() {
     Serial.begin(115200);
+    esp_task_wdt_init(60, false);
     _PN("=========== LOADCELL:INIT START ===========");
 
     deviceConfig.init();
     internetHandler.connect();
-    xTaskCreate(commandTask, "commandTask", 2048, NULL, 1, NULL);
-    sampler.init();
+    xTaskCreate(commandTask, "commandTask", 2048, NULL, 2, &commandTaskHandle);
 
     _PN("=========== LOADCELL:INIT DONE ===========");
 }
