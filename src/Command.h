@@ -4,6 +4,7 @@
 #include "Utilities.h"
 #include "DeviceConfig.h"
 #include "Sampler.h"
+#include "DataSaver.h"
 
 class Command {
     public:

@@ -11,6 +11,8 @@ class InternetHandler {
         bool isConnected();
         void wifiSetup();
         void tinygsmSetup();
+
+        bool publish(const String, const String);
 };
 
 extern InternetHandler internetHandler;
@@ -23,5 +25,6 @@ const char wifiSsid[] = WEBSERVER_WIFI_SSID;
 const char wifiPass[] = WEBSERVER_WIFI_PASS;
 
 #include <WiFi.h>
+#include <PubSubClient.h>
 
 extern WiFiClient client;

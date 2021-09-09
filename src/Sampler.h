@@ -11,7 +11,13 @@
 class Sampler {
    public:
     void init();
-    float* rawSampling();
+    float * avgSampling();
+
+    void start();
+    void stop();
+
+    private:
+    bool samplingActive;
 };
 
 extern void samplingTask(void*);

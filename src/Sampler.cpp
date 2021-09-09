@@ -3,7 +3,7 @@
 Sampler sampler;
 TaskHandle_t samplingTaskHandle;
 
-float* rawSampling();
+float* avgSampling();
 void sampling(void*);
 
 void Sampler::init() {
@@ -11,21 +11,27 @@ void Sampler::init() {
 }
 
 #define LOADCELL_AMOUNT 4
-uint16_t adcRead[LOADCELL_AMOUNT];
-unsigned int rawSampleCount = 0;
+const char* samplingMode = "bufferSize";
 
-const unsigned long rawSampleCountMax = 6000;
-const unsigned long rawSampleInterval = 0;       // interval from each raw sampling (in microseconds). need to create dynamically, count total sample count, reduce by estimated sisa waktu. default is 0
-const unsigned long rawSampleTimeMax = 1000000;  // max raw sampling time is 1 second (in microseconds)
+float* Sampler::avgSampling() {
+    uint16_t adcRead[LOADCELL_AMOUNT];
+    unsigned int rawSampleCount = 0;
+    const unsigned long rawSampleCountMax = 6000;
+    const unsigned long rawSampleInterval = 0;       // interval from each raw sampling (in microseconds). need to create dynamically, count total sample count, reduce by estimated sisa waktu. default is 0
+    const unsigned long rawSampleTimeMax = 1000000;  // max raw sampling time is 1 second (in microseconds)
 
-float* Sampler::rawSampling() {
     unsigned long start = micros();
     bool stopSampling;
 
     while (1) {
-        stopSampling = rawSampleCount >= rawSampleCountMax;  // stop based on buffer size
-        // stopSampling = micros() - start > rawSampleTimeMax; // stop based on time
-        // stopSampling = rawSampleCount >= rawSampleCountMax || micros() - start > rawSampleTimeMax; // stop based on buffer size and time
+        if (samplingMode == "bufferSize") {
+            stopSampling = rawSampleCount >= rawSampleCountMax;  // stop based on buffer size
+        } 
+        // else if (samplingMode == "timeMax") {
+        //     stopSampling = micros() - start > rawSampleTimeMax; // stop based on time
+        // } else if (samplingMode == "countMax") {
+        //     stopSampling = rawSampleCount >= rawSampleCountMax || micros() - start > rawSampleTimeMax; // stop based on buffer size and time
+        // }
 
         if (stopSampling) {
             break;
@@ -40,21 +46,21 @@ float* Sampler::rawSampling() {
         rawSampleCount++;
     }
 
-    float* avgSample = (float*)malloc(sizeof(float) * LOADCELL_AMOUNT);
+    float* avgSamples = (float*)malloc(sizeof(float) * LOADCELL_AMOUNT);
 
     for (int i = 0; i < 4; i++) {
-        avgSample[i] = (float)(adcRead[i] / rawSampleCount);
+        avgSamples[i] = (float)(adcRead[i] / rawSampleCount);
     }
 
-    _PF("rawSampleCount: %d\n", rawSampleCount);
-    _PF("time elapsed: %lu\n", micros() - start);
+    _PTF("rawSampleCount: %d\n", rawSampleCount);
+    _PTF("time elapsed: %lu\n", micros() - start);
 
-    return avgSample;
+    return avgSamples;
 }
 
 unsigned int avgSampleCount = 0;
 
-const unsigned int avgSampleCountMax = 50;         // is "buffer size"
+const unsigned int avgSampleCountMax = 50;        // is "buffer size"
 const unsigned long avgSampleInterval = 500000;   // in microseconds
 const unsigned long avgSampleTimeMax = 10000000;  // an alternative to not stop by buffer size, but time (in microseconds)
 
@@ -62,6 +68,10 @@ const unsigned long avgSampleTimeMax = 10000000;  // an alternative to not stop 
 void samplingTask(void* pvParameters) {
     bool stopSampling;
     unsigned long start = micros();
+
+    // write new sample data file
+    // add configuration and timestamp
+    // ...
 
     for (;;) {
         stopSampling = avgSampleCount >= avgSampleCountMax;  // stop based on buffer size
@@ -72,19 +82,22 @@ void samplingTask(void* pvParameters) {
             break;
         }
 
-        float* avgSample;
-        avgSample = sampler.rawSampling();
+        float* avgSamples;
+        avgSamples = sampler.avgSampling();
+
+        // append sample data file
+        // ...
 
         avgSampleCount++;
-        
-        _PF("sampling count: %d\n", avgSampleCount);
+
+        _PTF("sampling count: %d\n", avgSampleCount);
         for (int i = 0; i < LOADCELL_AMOUNT; i++) {
-            _PF("average adcRead[%d]: %.2f\n", i, avgSample[i]);
+            _PTF("average adcRead[%d]: %.2f\n", i, avgSamples[i]);
         }
         delayMicroseconds(avgSampleInterval);
     }
 
-    _PF("avgSampleCount: %d\n", avgSampleCount);
-    _PF("time elapsed: %lu\n", micros() - start);
+    _PTF("avgSampleCount: %d\n", avgSampleCount);
+    _PTF("time elapsed: %lu\n", micros() - start);
     vTaskDelete(NULL);
 }

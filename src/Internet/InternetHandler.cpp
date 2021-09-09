@@ -21,23 +21,23 @@ bool InternetHandler::reconnect() {
 }
 
 void InternetHandler::wifiSetup() {
-    _PRINTLN("[InternetHandler::wifiSetup]");
+    _PTN("[InternetHandler::wifiSetup]");
     delay(10);
     // We start by connecting to a WiFi network
-    _PRINT("    | Connecting to ");
-    _PRINT(wifiSsid);
+    _PT("    | Connecting to ");
+    _PT(wifiSsid);
 
     WiFi.begin(wifiSsid, wifiPass);
 
     long startTime = millis();
     while (WiFi.status() != WL_CONNECTED) {
         delay(500);
-        _PRINT(".");
+        _PT(".");
         if (millis() - startTime > 5000)
             ESP.restart();  // restart if taking too long
     }
 
-    _PRINTLN(" WiFi connected!");
-    _PRINT("    | IP address: ");
-    _PRINTLN(WiFi.localIP());
+    _PTN(" WiFi connected!");
+    _PT("    | IP address: ");
+    _PTN(WiFi.localIP());
 }

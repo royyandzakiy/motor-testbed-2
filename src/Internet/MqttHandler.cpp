@@ -13,34 +13,34 @@ void MqttHandler::setup() {
 }
 
 void callback(char *topic, byte *message, unsigned int length) {
-    _PRINT("[MqttHandler::callback] ");
-    _PRINTLN(topic);
-    _PRINT("    | Message: ");
+    _PT("[MqttHandler::callback] ");
+    _PTN(topic);
+    _PT("    | Message: ");
     String messageTemp;
 
     for (int i = 0; i < length; i++) {
-        _PRINT((char)message[i]);
+        _PT((char)message[i]);
         messageTemp += (char)message[i];
     }
-    _PRINTLN();
+    _PTN();
 
     mqttHandler.processMqttMessages(topic, messageTemp);
 }
 
 bool MqttHandler::publish(char *topic, String message) {
-    _PRINTF("[MqttHandler::publish] %s:%s\n", topic, message.c_str());
+    _PTF("[MqttHandler::publish] %s:%s\n", topic, message.c_str());
     return publish(topic, message.c_str());
 }
 
 bool MqttHandler::publish(char *topic, char *message) {
-    _PRINTF("[MqttHandler::publish] %s:%s\n", topic, message);
+    _PTF("[MqttHandler::publish] %s:%s\n", topic, message);
     return mqttClient.publish(topic, message);
 }
 
 void MqttHandler::processMqttMessages(char *topic, String messageTemp) {
     if (topic == commandsTopic) {
         if (messageTemp == "publish") {
-            _PRINTLN("    | Publishing message ");
+            _PTN("    | Publishing message ");
             // publish all messages
             // code here ...
         }
@@ -51,21 +51,21 @@ int mqttReconnectCount = 0;
 void MqttHandler::reconnect() {
     // Loop until we're reconnected
     while (!mqttClient.connected()) {
-        _PRINT("[MqttHandler::reconnect] Attempting MQTT connection...");
+        _PT("[MqttHandler::reconnect] Attempting MQTT connection...");
 
         // Attempt to connect
         esp_task_wdt_reset();  // WDT reset
         if (mqttClient.connect(mqttClientName, mqttUser, mqttPass)) {
-            _PRINTLN(" connected");
+            _PTN(" connected");
             // Subscribe
 
-            _PRINTF("    | Subscribed to topic: %s\n", commandsTopic);
+            _PTF("    | Subscribed to topic: %s\n", commandsTopic);
             mqttClient.subscribe(commandsTopic);
             esp_task_wdt_reset();  // WDT reset
         } else {
-            _PRINT(" failed, rc=");
-            _PRINT(mqttClient.state());
-            _PRINTLN(" try again in 5 seconds");
+            _PT(" failed, rc=");
+            _PT(mqttClient.state());
+            _PTN(" try again in 5 seconds");
             mqttReconnectCount++;
             if (mqttReconnectCount > 6) {
                 ESP.restart();
@@ -95,11 +95,11 @@ long count = 0;
 
 void publishHeartbeatCount() {
     if (millis() - publishHeartbeatCountLast > 5000) {
-        _PRINT("[publishHeartbeatCount] Count: ");
-        _PRINTLN(++count);
+        _PT("[publishHeartbeatCount] Count: ");
+        _PTN(++count);
 
         if (!mqttClient.publish(heartbeatTopic, String(count).c_str())) {
-            _PRINTF("    | Failed to publish %s:%s\n", heartbeatTopic, String(count).c_str());
+            _PTF("    | Failed to publish %s:%s\n", heartbeatTopic, String(count).c_str());
         }
         publishHeartbeatCountLast = millis();
         esp_task_wdt_reset();  // WDT reset
@@ -112,10 +112,10 @@ void publishMessageQueue() {
     // while (mqttHandler.queue.length() > 0) {
     //     if (millis() - publishMessageQueueLast > 5000) {
     //         mqtt_message_t  temp = mqttHandler.queue.unshift();
-    //         _PRINTF("[publishMessageQueue] %s:%s, %d left\n", temp.topic, temp.message, mqttHandler.queue.length());
+    //         _PTF("[publishMessageQueue] %s:%s, %d left\n", temp.topic, temp.message, mqttHandler.queue.length());
 
     //         // if (!mqttClient.publish(temp.topic, temp.message)) {
-    //         //     _PRINTF("    | Failed to publish %s:%s\n", temp.topic, temp.message);
+    //         //     _PTF("    | Failed to publish %s:%s\n", temp.topic, temp.message);
     //         //     esp_task_wdt_reset();  // WDT reset
     //         //     mqttHandler.reconnect();
     //         // }
@@ -127,13 +127,13 @@ void publishMessageQueue() {
 }
 
 // void MqttHandler::shift(mqtt_message_t mqttMessage) {
-//     _PRINT("[MqttHandler::shift]");
+//     _PT("[MqttHandler::shift]");
 //     if (queue.shift(mqttMessage)) {
-//         _PRINT(" successfully shifted");
+//         _PT(" successfully shifted");
 //     } else {
-//         _PRINT(" failed to shift");
+//         _PT(" failed to shift");
 //     }
-//     _PRINTF(", [%d] %s:%s\n", queue.length(), queue.getTail().topic, queue.getTail().message);
+//     _PTF(", [%d] %s:%s\n", queue.length(), queue.getTail().topic, queue.getTail().message);
 // }
 
 // void MqttHandler::shift(char *topic, char *message) {
