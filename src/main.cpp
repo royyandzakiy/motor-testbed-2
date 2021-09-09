@@ -51,6 +51,8 @@ void setup() {
 
     deviceConfig.init();
     internetHandler.connect();
+    sampler.init();
+    
     xTaskCreate(commandTask, "commandTask", 2048, NULL, 2, &commandTaskHandle);
 
     _PTN("=========== LOADCELL:INIT DONE ===========");
