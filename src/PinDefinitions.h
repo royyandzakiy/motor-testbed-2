@@ -6,13 +6,12 @@
 #define SDCARD_MOSI_PIN 14
 #define SDCARD_CS_PIN 21
 
-// SIM
-#define SIM_TX_PIN 33
-#define SIM_RX_PIN 32
-
-// RTC
-#define RTC_SDA_PIN 23
-#define RTC_SCL_PIN 22
-
 // SENSOR
-// ...
+#define FLOWSENSOR_PIN 32
+#define LOADCELL_1_PIN 36
+#define LOADCELL_2_PIN 39
+#define LOADCELL_3_PIN 34
+#define LOADCELL_4_PIN 35
+
+// ACTUATORS
+#define PUMP_RELAY_PIN 33

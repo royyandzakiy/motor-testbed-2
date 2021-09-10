@@ -94,10 +94,10 @@ float* Sampler::avgSampling() {
     unsigned long start = micros();
 
     while (!stopSampling) {
-        adcRead[0] += adc1_get_raw(ADC1_CHANNEL_4);
-        adcRead[1] += adc1_get_raw(ADC1_CHANNEL_5);
-        adcRead[2] += adc1_get_raw(ADC1_CHANNEL_6);
-        adcRead[3] += adc1_get_raw(ADC1_CHANNEL_7);
+        adcRead[0] += adc1_get_raw(ADC1_CHANNEL_0); // 36
+        adcRead[1] += adc1_get_raw(ADC1_CHANNEL_3); // 39
+        adcRead[2] += adc1_get_raw(ADC1_CHANNEL_6); // 34
+        adcRead[3] += adc1_get_raw(ADC1_CHANNEL_7); // 35
 
         delayMicroseconds(config.rawSampleInterval);
         rawSampleCount++;
@@ -188,16 +188,16 @@ void defaultConfiguration() {
      * --------- SAMPLING CONFIGURATIONS ---------
      */
     // --------- RAW SAMLING ---------
-    sampler.set("rawSampleInterval", "0");  // interval from each raw sampling (in microseconds). need to create dynamically, count total sample count, reduce by estimated sisa waktu. default is 0
+    sampler.set("rawSampleInterval", "10000");  // interval from each raw sampling (in microseconds). need to create dynamically, count total sample count, reduce by estimated sisa waktu. default is 0
 
     // --------- AVERAGE SAMPLING ---------
-    sampler.set("avgSampleInterval", "5000");  // in microseconds
+    sampler.set("avgSampleInterval", "1000000");  // in microseconds
     sampler.set("avgSamplingStopMode", "buffer");
-    sampler.set("avgSamplingBufferSize", "20");        // is buffer size"
+    sampler.set("avgSamplingBufferSize", "60");        // is buffer size"
     sampler.set("avgSamplingDurationMax", "1000000");  // max raw sampling time is 1 second (in microseconds)
 
     // --------- TOTAL SAMPLING ---------
     sampler.set("totalSamplingStopMode", "buffer");
-    sampler.set("totalSamplingBufferSize", "20");       // is "buffer size"
+    sampler.set("totalSamplingBufferSize", "100");       // is "buffer size"
     sampler.set("totalSampleDurationMax", "10000000");  // an alternative to not stop by buffer size, but time (in microseconds)
 }
