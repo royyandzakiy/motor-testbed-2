@@ -5,10 +5,10 @@
 
 class FlowSensor {
    public:
-    void init();
+    void init(const uint8_t);
     void tick();
     void reset();
-    void flowtickIsr();
+    void flowOutTickIsr();
     float get();
 
    private:
@@ -18,5 +18,7 @@ class FlowSensor {
     float debitConstant = 2.6;  // Konstanta flow sensor
 };
 
-extern void flowtickIsr();
-extern FlowSensor flowSensor;
+extern void flowOutTickIsr();
+extern void flowInTickIsr();
+extern FlowSensor florSensorOut;
+extern FlowSensor florSensorIn;

@@ -1,14 +1,19 @@
 #include "FlowSensor.h"
 
-FlowSensor flowSensor;
+FlowSensor florSensorOut;
+FlowSensor florSensorIn;
 
-void IRAM_ATTR flowtickIsr() {
-    flowSensor.tick();
+void IRAM_ATTR flowOutTickIsr() {
+    florSensorOut.tick();
 }
 
-void FlowSensor::init() {
-    pinMode(FLOWSENSOR_PIN, INPUT);
-    digitalWrite(FLOWSENSOR_PIN, HIGH);
+void IRAM_ATTR flowInTickIsr() {
+    florSensorIn.tick();
+}
+
+void FlowSensor::init(const uint8_t flowSensorPin) {
+    pinMode(flowSensorPin, INPUT);
+    digitalWrite(flowSensorPin, HIGH);
 
     reset();
 }
@@ -29,13 +34,13 @@ void FlowSensor::reset() {
 
 /***
  * @brief
- * @return debit in L/s
+ * @return debitTarget in L/s
  */
 float FlowSensor::get() {
     unsigned long elapsedTime = millis() - debitStart;
 
-    // debit formula, L/s
-    float debit = (debitTick / 7.5) * debitConstant / 60.0 / elapsedTime;  
+    // debitTarget formula, L/s
+    float debitTarget = (debitTick / 7.5) * debitConstant / 60.0 / elapsedTime;  
 
-    return debit;
+    return debitTarget;
 }
