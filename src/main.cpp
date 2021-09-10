@@ -8,11 +8,15 @@
 #include "esp_task_wdt.h"
 
 #define LOADCELL_THRESHOLD 0
-bool triggerLoadThreshold() {
+
+/**
+ * @brief This function checks if any loadcell have reached threshold
+ */
+bool checkLoadThreshold() {
     uint16_t * sensorValues = loadcellSampler.getSensorValues();
     for (int i=0; i<4; i++) {
         if (sensorValues[i] == LOADCELL_THRESHOLD) {
-             _PTN("[triggerLoadThreshold] triggered!");
+             _PTN("[checkLoadThreshold] triggered!");
             return true;
         }
     }
@@ -20,11 +24,11 @@ bool triggerLoadThreshold() {
 }
 
 /**
- * @brief The default sampling start
+ * @brief The default sampling start for demo purposes
  * to start, input to serial
- * "samplingStart:" // don't forget the :
+ * "samplingStartDemo:" // don't forget the ':'
  */
-void samplingStart() {
+void samplingStartDemo() {
     // lakukan pembacaan hingga buffer penuh
     loadcellSampler.set("avgSamplingBufferSize", "60");
     loadcellSampler.set("totalSamplingStopMode", "buffer");
@@ -64,14 +68,20 @@ void samplingStart() {
     bool sampleThreshold;
     
     do {
-        sampleThreshold = triggerLoadThreshold();
+        sampleThreshold = checkLoadThreshold();
     } while (sampleThreshold);
     _PTN("loadcellSampler done#3");
     pumpIn.stop();
     
 }
 
-// MAIN
+/**
+ * @brief connect to internet, activate DAC to low value,
+ * flowsensor in and pump in activate with debitTarget,
+ * flowsensor out and pump out activate with debitTarget,
+ * loadcellSampler start sampling, serial command start
+ * listening for serial inputs
+ */ 
 void setup() {
     Serial.begin(115200);
     esp_task_wdt_init(120, false);  // turn of wdt panic, so never restart

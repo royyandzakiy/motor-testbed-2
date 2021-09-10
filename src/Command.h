@@ -16,6 +16,6 @@ class Command {
         void process(const String);
 };
 
-extern void samplingStart();
+extern void samplingStartDemo();
 extern void commandTask(void *);
 extern Command serialCommand;

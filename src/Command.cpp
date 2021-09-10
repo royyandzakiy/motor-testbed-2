@@ -27,8 +27,8 @@ void Command::process(const String _input) {
     String _command = _input.substring(0, _input.indexOf(':'));
     if (_command == "at" || _command == "AT") {
         _PTN("OK");
-    } else if (_command == "samplingStart") {
-        samplingStart();
+    } else if (_command == "samplingStartDemo") {
+        samplingStartDemo();
     }
 
     // LOADCELL SAMPLER
