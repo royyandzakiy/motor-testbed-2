@@ -104,7 +104,6 @@ float* Sampler::avgSampling() {
         rawSampleCount++;
 
         if (strcmp(config.avgSamplingStopMode, "buffer") == 0) {
-            _PTN("manjiw");
             stopSampling = rawSampleCount >= config.avgSamplingBufferSize;  // stop based on buffer size
         } else if (strcmp(config.avgSamplingStopMode, "duration") == 0) {
             stopSampling = micros() - start > config.avgSamplingDurationMax;  // stop based on time
