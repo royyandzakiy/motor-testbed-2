@@ -6,7 +6,7 @@
 
 class PumpHandler {
     public:
-        void init(const uint8_t);
+        void init(const char *, uint8_t);
         void set(const unsigned int);
         unsigned int get();
         
@@ -19,10 +19,13 @@ class PumpHandler {
         float get(const char *);
         void set(const char *, const char *);
         void printConfiguration();
+        
+        bool state;
 
     private:
+        const char * name;
+        uint8_t pin;
         unsigned int dutyCycle;
-        bool state;
 
         float kp;
         float ki;

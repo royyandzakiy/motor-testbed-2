@@ -3,18 +3,17 @@
 Sampler loadcellSampler;
 TaskHandle_t samplingTaskHandle;
 
-#define LOADCELL_AMOUNT 4
 
 #define SAMPLING_PRINT_VERBOSE
 #define SAMPLING_PRINT_VISUALIZER
 
 void Sampler::init() {
-    _PTN("[Sampler::init]");
+    _PTN("[LoadcellSampler::init]");
     defaultConfiguration();
 }
 
 void Sampler::start() {
-    _PTN("[Sampler::start]");
+    _PTN("[LoadcellSampler::start]");
 
     if (samplingTaskHandle != NULL) {
         _PTN("    | Sampling already running.");
@@ -26,6 +25,14 @@ void Sampler::start() {
 
 void Sampler::reset() {
     defaultConfiguration();
+}
+
+bool Sampler::getState() {
+    return state;
+}
+
+uint16_t * Sampler::getSensorValues() {
+    return sensorValues;
 }
 
 void Sampler::set(const char* _key, const char* _value) {
@@ -51,7 +58,7 @@ void Sampler::set(const char* _key, const char* _value) {
 }
 
 void Sampler::stop() {
-    _PTN("[Sampler::stop]");
+    _PTN("[LoadcellSampler::stop]");
 
     if (samplingTaskHandle != NULL) {
         eTaskState taskState = eTaskGetState(samplingTaskHandle);
@@ -88,16 +95,15 @@ void Sampler::printConfiguration() {
 
 float* Sampler::avgSampling() {
     // initialize variables
-    uint16_t adcRead[LOADCELL_AMOUNT];
     bool stopSampling = false;
     unsigned int rawSampleCount = 0;
     unsigned long start = micros();
 
     while (!stopSampling) {
-        adcRead[0] += adc1_get_raw(ADC1_CHANNEL_0); // 36
-        adcRead[1] += adc1_get_raw(ADC1_CHANNEL_3); // 39
-        adcRead[2] += adc1_get_raw(ADC1_CHANNEL_6); // 34
-        adcRead[3] += adc1_get_raw(ADC1_CHANNEL_7); // 35
+        sensorValues[0] += adc1_get_raw(ADC1_CHANNEL_0); // 36
+        sensorValues[1] += adc1_get_raw(ADC1_CHANNEL_3); // 39
+        sensorValues[2] += adc1_get_raw(ADC1_CHANNEL_6); // 34
+        sensorValues[3] += adc1_get_raw(ADC1_CHANNEL_7); // 35
 
         delayMicroseconds(config.rawSampleInterval);
         rawSampleCount++;
@@ -114,7 +120,7 @@ float* Sampler::avgSampling() {
     float* avgSamples = (float*)malloc(sizeof(float) * LOADCELL_AMOUNT);
 
     for (int i = 0; i < 4; i++) {
-        avgSamples[i] = (float)(adcRead[i] / rawSampleCount);
+        avgSamples[i] = (float)(sensorValues[i] / rawSampleCount);
     }
 
 #ifdef SAMPLING_PRINT_VERBOSE
@@ -192,10 +198,10 @@ void defaultConfiguration() {
      * --------- SAMPLING CONFIGURATIONS ---------
      */
     // --------- RAW SAMLING ---------
-    loadcellSampler.set("rawSampleInterval", "10000");  // interval from each raw sampling (in microseconds). need to create dynamically, count total sample count, reduce by estimated sisa waktu. default is 0
+    loadcellSampler.set("rawSampleInterval", "0");  // interval from each raw sampling (in microseconds). need to create dynamically, count total sample count, reduce by estimated sisa waktu. default is 0
 
     // --------- AVERAGE SAMPLING ---------
-    loadcellSampler.set("avgSampleInterval", "1000000");  // in microseconds
+    loadcellSampler.set("avgSampleInterval", "0");  // in microseconds
     loadcellSampler.set("avgSamplingStopMode", "buffer");
     loadcellSampler.set("avgSamplingBufferSize", "60");        // is buffer size"
     loadcellSampler.set("avgSamplingDurationMax", "1000000");  // max raw sampling time is 1 second (in microseconds)

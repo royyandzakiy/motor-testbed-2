@@ -3,9 +3,10 @@
 #include <Adafruit_MCP4725.h>
 #include <Wire.h>
 
+#include "Utilities.h"
 #include "PinDefinitions.h"
 
-class Mcp4725Handler {
+class DacHandler {
    public:
     void init();
     void set(const unsigned int);
@@ -14,4 +15,4 @@ class Mcp4725Handler {
     Adafruit_MCP4725 dac;
 };
 
-extern Mcp4725Handler mcp4725Handler;
+extern DacHandler dacHandler;

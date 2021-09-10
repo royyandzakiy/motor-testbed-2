@@ -11,9 +11,13 @@ void IRAM_ATTR flowInTickIsr() {
     florSensorIn.tick();
 }
 
-void FlowSensor::init(const uint8_t flowSensorPin) {
-    pinMode(flowSensorPin, INPUT);
-    digitalWrite(flowSensorPin, HIGH);
+void FlowSensor::init(const char * _name, uint8_t _pin) {
+    name = _name;
+    pin = _pin;
+
+    _PTF("[FlowSensor::init] \"%s\" on gpio pin %d initiated\n", name, pin);
+    pinMode(pin, INPUT);
+    digitalWrite(pin, HIGH);
 
     reset();
 }

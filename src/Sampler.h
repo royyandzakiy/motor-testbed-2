@@ -8,6 +8,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#define LOADCELL_AMOUNT 4
+
 typedef struct {
     // --------- RAW SAMPLING ---------
     unsigned long rawSampleInterval;        // interval from each raw sampling (in microseconds). need to create dynamically, count total sample count, reduce by estimated sisa waktu. default is 0
@@ -35,10 +37,14 @@ class Sampler {
     void reset();
     void set(const char *, const char *);
     void printConfiguration();
+    
+    bool getState();
+    uint16_t * getSensorValues();
 
     bool state;
 
     SamplerConfig_t config;
+    uint16_t sensorValues[LOADCELL_AMOUNT];
 };
 
 extern void samplingTask(void*);

@@ -18,9 +18,13 @@ const int freq = 5000;
 const int pumpChannel = 0;
 const int resolution = PWM_BIT_RESOLUTION;
 
-void PumpHandler::init(const uint8_t pumpPin) {
+void PumpHandler::init(const char * _name, uint8_t _pin) {
+    name = _name;
+    pin = _pin;
+
+    _PTF("[PumpHandler::init] \"%s\" on gpio pin %d initiated\n", name, pin);
     ledcSetup(pumpChannel, freq, resolution);
-    ledcAttachPin(pumpPin, pumpChannel);
+    ledcAttachPin(pin, pumpChannel);
 
     state = false;
 
@@ -42,11 +46,13 @@ void PumpHandler::set(const unsigned int _dutyCycle) {
 }
 
 void PumpHandler::start() {
+    _PTF("[PumpHandler::start] %s started\n", name);
     state = true;
     poll();
 }
 
 void PumpHandler::stop() {
+    _PTF("[PumpHandler::stop] %s stopped\n", name);
     state = false;
     ledcWrite(pumpChannel, 0);
 }

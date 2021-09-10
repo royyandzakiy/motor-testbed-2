@@ -1,27 +1,52 @@
-#include "Utilities.h"
-#include "Internet/InternetHandler.h"
 #include "Command.h"
-#include "Sampler.h"
-#include "PumpHandler.h"
-#include "Mcp4725Handler.h"
+#include "DacHandler.h"
 #include "FlowSensor.h"
+#include "Internet/InternetHandler.h"
+#include "PumpHandler.h"
+#include "Sampler.h"
+#include "Utilities.h"
 #include "esp_task_wdt.h"
+
+#define LOADCELL_THRESHOLD 0
+bool triggerLoadThreshold() {
+    uint16_t * sensorValues = loadcellSampler.getSensorValues();
+    for (int i=0; i<4; i++) {
+        if (sensorValues[i] == LOADCELL_THRESHOLD) {
+             _PTN("[triggerLoadThreshold] triggered!");
+            return true;
+        }
+    }
+    return false;
+}
 
 /**
  * @brief The default sampling start
  * to start, input to serial
  * "samplingStart:" // don't forget the :
- */ 
+ */
 void samplingStart() {
     // lakukan pembacaan hingga buffer penuh
+    loadcellSampler.set("avgSamplingBufferSize", "60");
     loadcellSampler.set("totalSamplingStopMode", "buffer");
     loadcellSampler.set("totalSamplingBufferSize", "100");
-    loadcellSampler.start();    
+    loadcellSampler.start();
+    bool samplingState;
+    samplingState = loadcellSampler.getState();
+    do {
+        samplingState = loadcellSampler.getState();
+    } while (samplingState);
+    _PTN("loadcellSampler done#1");
     delay(5000);
 
     // kembali lakukan pembacaan, tetapi hidupkan water pump
     loadcellSampler.start();
     pumpOut.start();
+    samplingState = loadcellSampler.getState();
+    do {
+        samplingState = loadcellSampler.getState();
+    } while (samplingState);
+    _PTN("loadcellSampler done#2");
+    pumpOut.stop();
     delay(5000);
 
     /** 
@@ -34,36 +59,44 @@ void samplingStart() {
      * tetapi kalau mau otomatis, 
      * tinggal uncomment dibawah ini
      */
-    // loadcellSampler.start();
-    // pumpIn.start();
+    loadcellSampler.start();
+    pumpIn.start();
+    bool sampleThreshold;
+    
+    do {
+        sampleThreshold = triggerLoadThreshold()
+    } while (sampleThreshold);
+    _PTN("loadcellSampler done#3");
+    pumpIn.stop();
+    
 }
 
 // MAIN
 void setup() {
     Serial.begin(115200);
-    esp_task_wdt_init(120, false); // turn of wdt panic, so never restart
+    esp_task_wdt_init(120, false);  // turn of wdt panic, so never restart
     _PTN("=========== LOADCELL:INIT START ===========");
 
     internetHandler.connect();
-    mcp4725Handler.init();
+    dacHandler.init();
 
-    florSensorIn.init(FLOWSENSOR_IN_PIN);
-    florSensorOut.init(FLOWSENSOR_OUT_PIN);
+    florSensorIn.init("florSensorIn", FLOWSENSOR_IN_PIN);
     attachInterrupt(FLOWSENSOR_IN_PIN, flowInTickIsr, RISING);
-    attachInterrupt(FLOWSENSOR_OUT_PIN, flowOutTickIsr, RISING);
-
     pumpIn.set("debitTarget", "20.0");
-    pumpIn.init(PUMP_IN_PIN);
+    pumpIn.init("pumpIn", PUMP_IN_PIN);
+
+    florSensorOut.init("florSensorOut", FLOWSENSOR_OUT_PIN);
+    attachInterrupt(FLOWSENSOR_OUT_PIN, flowOutTickIsr, RISING);
     pumpOut.set("debitTarget", "0.0");
-    pumpOut.init(PUMP_OUT_PIN);
-    
+    pumpOut.init("pumpOut", PUMP_OUT_PIN);
+
     loadcellSampler.init();
-    
-    serialCommand.init();
 
     _PTN("=========== LOADCELL:INIT DONE ===========");
+
+    serialCommand.init();
 }
 
 void loop() {
-    vTaskDelete(NULL); // just delete main loop task
+    vTaskDelete(NULL);  // just delete main loop task
 }
