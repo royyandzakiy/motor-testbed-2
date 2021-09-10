@@ -39,6 +39,11 @@ stopPi              --> sample usage "stopPi:"
 statePi             --> sample usage "statePi:"
 printPi             --> sample usage "printPi:"
 setPi               --> sample usage "setPi:key=value;"
+
+// example inputs
+setLs:avgSamplingBufferSize=60;
+setLs:totalSamplingStopMode=buffer;
+setLs:totalSamplingBufferSize=100;
 ```
 
 ## Requirements:

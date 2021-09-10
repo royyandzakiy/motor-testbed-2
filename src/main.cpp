@@ -46,6 +46,8 @@ void samplingStartDemo() {
     loadcellSampler.start();
     pumpOut.start();
     samplingState = loadcellSampler.getState();
+
+    // will stop if buffer filled fully
     do {
         samplingState = loadcellSampler.getState();
     } while (samplingState);
@@ -66,10 +68,13 @@ void samplingStartDemo() {
     loadcellSampler.start();
     pumpIn.start();
     bool sampleThreshold;
-    
+    bool toStop;
+
+    // will stop if loadcell reach threshold, or buffer filled fully
     do {
         sampleThreshold = checkLoadThreshold();
-    } while (sampleThreshold);
+        samplingState = loadcellSampler.getState();
+    } while (sampleThreshold || samplingState);
     _PTN("loadcellSampler done#3");
     pumpIn.stop();
     
