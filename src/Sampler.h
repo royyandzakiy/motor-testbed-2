@@ -32,6 +32,7 @@ class Sampler {
     void start();
     void stop();
 
+    void reset();
     void set(const char *, const char *);
     void printConfiguration();
 
@@ -42,5 +43,6 @@ class Sampler {
 
 extern void samplingTask(void*);
 extern TaskHandle_t samplingTaskHandle;
+void defaultConfiguration();
 
 extern Sampler sampler;

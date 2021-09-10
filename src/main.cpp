@@ -60,9 +60,4 @@ void setup() {
 
 void loop() {
     // do nothing
-    // commandTask(NULL);
-    // samplerTask(NULL);
-    // uploaderTask(NULL);
-
-    // command.poll(NULL);
 }

@@ -35,6 +35,9 @@ void Command::process(const String _input) {
         // xTaskCreate(uploadTask, "uploadTask", 2048, NULL, 1, &uploadTaskHandle);
     } else if (_command == "print") {
         sampler.printConfiguration();
+    } else if (_command == "reset") {
+        _PTF("    | [reset]\n");
+        sampler.reset();
     } else if (_command == "set") {
         const String _key = _input.substring(_input.indexOf(':') + 1, _input.indexOf('='));
         const String _value = _input.substring(_input.indexOf('=') + 1, _input.indexOf(';'));
@@ -45,6 +48,7 @@ void Command::process(const String _input) {
         // set:rawSampleInterval=15;
         // set:avgSamplingBufferSize=15;
         // set:totalSamplingStopMode=bufferdurationtimestamp;
+        // set:totalSamplingBufferSize=20;
         // print:
     }
 }
