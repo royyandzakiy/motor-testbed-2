@@ -4,8 +4,17 @@
 
 class PumpHandler {
     public:
-        PumpHandler();
+        void init();
         void set(const unsigned int);
+        unsigned int get();
+        
+        void start();
+        void stop();
+        void poll();
+
+    private:
+        unsigned int dutyCycle;
+        bool state;
 };
 
 extern PumpHandler pumpHandler;

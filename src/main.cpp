@@ -3,6 +3,9 @@
 #include "Internet/InternetHandler.h"
 #include "Command.h"
 #include "Sampler.h"
+#include "PumpHandler.h"
+#include "Mcp4725Handler.h"
+#include "FlowSensor.h"
 #include "esp_task_wdt.h"
 
 TaskHandle_t commandTaskHandle;
@@ -51,7 +54,11 @@ void setup() {
 
     deviceConfig.init();
     internetHandler.connect();
+    mcp4725Handler.init();
+    pumpHandler.init();
     sampler.init();
+    flowSensor.init();
+    attachInterrupt(FLOWSENSOR_PIN, flowtickIsr, RISING);
     
     xTaskCreate(commandTask, "commandTask", 2048, NULL, 2, &commandTaskHandle);
 
