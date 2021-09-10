@@ -44,6 +44,9 @@ setPi               --> sample usage "setPi:key=value;"
 setLs:avgSamplingBufferSize=60;
 setLs:totalSamplingStopMode=buffer;
 setLs:totalSamplingBufferSize=100;
+
+startPo;
+stopPo;
 ```
 
 ## Requirements:
