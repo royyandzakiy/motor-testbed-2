@@ -87,7 +87,6 @@ void Sampler::printConfiguration() {
 }
 
 float* Sampler::avgSampling() {
-    _PTN("[Sampler::avgSampling]");
     // initialize variables
     uint16_t adcRead[LOADCELL_AMOUNT];
     bool stopSampling = false;
