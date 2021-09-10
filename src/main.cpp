@@ -1,8 +1,8 @@
 #include "Command.h"
-#include "DacHandler.h"
-#include "FlowSensor.h"
+#include "Peripherals/DacHandler.h"
+#include "Peripherals/FlowSensor.h"
 #include "Internet/InternetHandler.h"
-#include "PumpHandler.h"
+#include "Peripherals/PumpHandler.h"
 #include "Sampler.h"
 #include "Utilities.h"
 #include "esp_task_wdt.h"
@@ -64,7 +64,7 @@ void samplingStart() {
     bool sampleThreshold;
     
     do {
-        sampleThreshold = triggerLoadThreshold()
+        sampleThreshold = triggerLoadThreshold();
     } while (sampleThreshold);
     _PTN("loadcellSampler done#3");
     pumpIn.stop();

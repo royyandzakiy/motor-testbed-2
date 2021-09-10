@@ -3,8 +3,8 @@
 #include <Arduino.h>
 #include "Utilities.h"
 #include "Sampler.h"
-#include "DataSaver.h"
-#include "PumpHandler.h"
+#include "Storage/DataSaver.h"
+#include "Peripherals/PumpHandler.h"
 #include "esp_task_wdt.h"
 
 extern TaskHandle_t commandTaskHandle;

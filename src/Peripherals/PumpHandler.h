@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include "Utilities.h"
 #include "PinDefinitions.h"
-#include "FlowSensor.h"
+#include "Peripherals/FlowSensor.h"
 
 class PumpHandler {
     public:
