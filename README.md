@@ -15,7 +15,7 @@
 ## Commands List
 ```
 // General
-AT                  --> sample usage "AT:key=value;"
+AT                  --> sample usage "AT:"
 samplingStartDemo   --> sample usage "samplingStartDemo:"
 
 // Loadcell Sampler
