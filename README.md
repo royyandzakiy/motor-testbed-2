@@ -15,30 +15,30 @@
 ## Commands List
 ```
 // General
-AT: AT:key=value;
-samplingStartDemo: samplingStartDemo:key=value;
+AT                  --> sample usage "AT:key=value;"
+samplingStartDemo   --> sample usage "samplingStartDemo:"
 
 // Loadcell Sampler
-startLs: startLs:
-stopLs: stopLs:
-stateLs: stateLs:
-printLs: printLs:
-resetLs: resetLs:
-setLs: setLs:key=value;
+startLs             --> sample usage "startLs:"
+stopLs              --> sample usage "stopLs:"
+stateLs             --> sample usage "stateLs:"
+printLs             --> sample usage "printLs:"
+resetLs             --> sample usage "resetLs:"
+setLs               --> sample usage "setLs:key=value;"
 
 // Pump Out
-startPo: startPo:
-stopPo: stopPo:
-statePo: statePo:
-printPo: printPo:
-setPo: setPo:key=value;
+startPo             --> sample usage "startPo:"
+stopPo              --> sample usage "stopPo:"
+statePo             --> sample usage "statePo:"
+printPo             --> sample usage "printPo:"
+setPo               --> sample usage "setPo:key=value;"
 
 // Pump In
-startPi: startPi:
-stopPi: stopPi:
-statePi: statePi:
-printPi: printPi:
-setPi: setPi:key=value;
+startPi             --> sample usage "startPi:"
+stopPi              --> sample usage "stopPi:"
+statePi             --> sample usage "statePi:"
+printPi             --> sample usage "printPi:"
+setPi               --> sample usage "setPi:key=value;"
 ```
 
 ## Requirements:
