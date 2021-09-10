@@ -1,6 +1,6 @@
 #include "Sampler.h"
 
-Sampler sampler;
+Sampler loadcellSampler;
 TaskHandle_t samplingTaskHandle;
 
 #define LOADCELL_AMOUNT 4
@@ -67,7 +67,7 @@ void Sampler::stop() {
 }
 
 void Sampler::printConfiguration() {
-    _PTF("    | ------ CONFIGURATION ------\n");
+    _PTF("    | ------ SAMPLER CONFIGURATION ------\n");
     _PTF("    | \n");
     _PTF("    | RAW SAMPLING\n");
     _PTF("    |     rawSampleInterval: %lu us\n", config.rawSampleInterval);
@@ -126,14 +126,18 @@ float* Sampler::avgSampling() {
     return avgSamples;
 }
 
+#include "esp_task_wdt.h"
+
 void samplingTask(void* pvParameters) {
+    esp_task_wdt_delete(NULL);
+
     _PTN("[samplingTask] Start");
     bool stopSampling;
     unsigned long start = micros();
     unsigned int avgSampleCount = 0;
 
     // print configuration
-    sampler.printConfiguration();
+    loadcellSampler.printConfiguration();
     _PTF("    |\n");
     _PTF("    | ------ SAMPLING: START ------\n");
 
@@ -141,9 +145,9 @@ void samplingTask(void* pvParameters) {
     // add configuration and timestamp
     // ...
 
-    while (sampler.state) {
+    while (loadcellSampler.state) {
         float* avgSamples;
-        avgSamples = sampler.avgSampling();
+        avgSamples = loadcellSampler.avgSampling();
 
         // append sample data file
         // ...
@@ -159,19 +163,19 @@ void samplingTask(void* pvParameters) {
         // ...
 #endif  // SAMPLING_PRINT_VERBOSE
 
-        if (strcmp(sampler.config.totalSamplingStopMode, "buffer") == 0) {
-            stopSampling = (avgSampleCount >= sampler.config.totalSamplingBufferSize);  // stop based on buffer size
-        } else if (strcmp(sampler.config.totalSamplingStopMode, "duration") == 0) {
-            stopSampling = micros() - start > sampler.config.totalSampleDurationMax;  // stop based on time
-        } else if (strcmp(sampler.config.totalSamplingStopMode, "bufferduration") == 0) {
-            stopSampling = avgSampleCount >= sampler.config.totalSamplingBufferSize || micros() - start > sampler.config.totalSampleDurationMax;  // stop based on buffer size & time
+        if (strcmp(loadcellSampler.config.totalSamplingStopMode, "buffer") == 0) {
+            stopSampling = (avgSampleCount >= loadcellSampler.config.totalSamplingBufferSize);  // stop based on buffer size
+        } else if (strcmp(loadcellSampler.config.totalSamplingStopMode, "duration") == 0) {
+            stopSampling = micros() - start > loadcellSampler.config.totalSampleDurationMax;  // stop based on time
+        } else if (strcmp(loadcellSampler.config.totalSamplingStopMode, "bufferduration") == 0) {
+            stopSampling = avgSampleCount >= loadcellSampler.config.totalSamplingBufferSize || micros() - start > loadcellSampler.config.totalSampleDurationMax;  // stop based on buffer size & time
         }
 
         if (stopSampling) {
-            sampler.state = false;
+            loadcellSampler.state = false;
             samplingTaskHandle = NULL;
         }
-        delayMicroseconds(sampler.config.avgSampleInterval);
+        delayMicroseconds(loadcellSampler.config.avgSampleInterval);
     }
 
     _PTF("    | ------ SAMPLING: STOP ------\n");
@@ -188,16 +192,16 @@ void defaultConfiguration() {
      * --------- SAMPLING CONFIGURATIONS ---------
      */
     // --------- RAW SAMLING ---------
-    sampler.set("rawSampleInterval", "10000");  // interval from each raw sampling (in microseconds). need to create dynamically, count total sample count, reduce by estimated sisa waktu. default is 0
+    loadcellSampler.set("rawSampleInterval", "10000");  // interval from each raw sampling (in microseconds). need to create dynamically, count total sample count, reduce by estimated sisa waktu. default is 0
 
     // --------- AVERAGE SAMPLING ---------
-    sampler.set("avgSampleInterval", "1000000");  // in microseconds
-    sampler.set("avgSamplingStopMode", "buffer");
-    sampler.set("avgSamplingBufferSize", "60");        // is buffer size"
-    sampler.set("avgSamplingDurationMax", "1000000");  // max raw sampling time is 1 second (in microseconds)
+    loadcellSampler.set("avgSampleInterval", "1000000");  // in microseconds
+    loadcellSampler.set("avgSamplingStopMode", "buffer");
+    loadcellSampler.set("avgSamplingBufferSize", "60");        // is buffer size"
+    loadcellSampler.set("avgSamplingDurationMax", "1000000");  // max raw sampling time is 1 second (in microseconds)
 
     // --------- TOTAL SAMPLING ---------
-    sampler.set("totalSamplingStopMode", "buffer");
-    sampler.set("totalSamplingBufferSize", "100");       // is "buffer size"
-    sampler.set("totalSampleDurationMax", "10000000");  // an alternative to not stop by buffer size, but time (in microseconds)
+    loadcellSampler.set("totalSamplingStopMode", "buffer");
+    loadcellSampler.set("totalSamplingBufferSize", "100");       // is "buffer size"
+    loadcellSampler.set("totalSampleDurationMax", "10000000");  // an alternative to not stop by buffer size, but time (in microseconds)
 }

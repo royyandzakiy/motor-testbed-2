@@ -45,4 +45,4 @@ extern void samplingTask(void*);
 extern TaskHandle_t samplingTaskHandle;
 void defaultConfiguration();
 
-extern Sampler sampler;
+extern Sampler loadcellSampler;
