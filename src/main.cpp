@@ -10,32 +10,6 @@
 
 TaskHandle_t commandTaskHandle;
 
-// DATA SAVER
-bool toSave = false, toUpload = false;
-
-void savingTask(void* pvParameters) {
-    if (toSave) {
-        // get last sampleBuffer
-        // save to SD Card
-        // ...
-
-        // after finish saving, trigger to get file then upload
-        if (deviceConfig.upload == DeviceConfig::UploadConfig_t::AUTOMATIC) {
-            // toUpload = true;
-            // String sampleFile = dataHandler.get();
-            // uploader.invoke(sampleFile);
-        }
-    }
-}
-
-void uploaderTask(void* pvParameters) {
-    for (;;) {
-        // check if in pipeline there are anything to upload
-        if (toUpload) {
-        }
-    }
-}
-
 void commandTask(void* pvParameters) {
     esp_task_wdt_delete(NULL);
     _PTN("[commandTask] started");
@@ -66,5 +40,5 @@ void setup() {
 }
 
 void loop() {
-    // do nothing
+    vTaskDelete(NULL); // just delete main loop task
 }

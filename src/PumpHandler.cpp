@@ -47,3 +47,9 @@ void ledTest() {
         delay(15);
     }
 }
+
+void PumpHandler::meassure(float desiredDebit) {
+    float error = 0.0;
+    error = desiredDebit-flowSensor.get();
+    // do other things
+}

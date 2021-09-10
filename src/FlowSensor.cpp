@@ -31,8 +31,11 @@ void FlowSensor::reset() {
  * @brief
  * @return debit in L/s
  */
-unsigned int FlowSensor::get() {
+float FlowSensor::get() {
     unsigned long elapsedTime = millis() - debitStart;
-    unsigned int debit = (debitTick / 7.5) * debitConstant / 60.0 / elapsedTime;  // debit formula, L/s
+
+    // debit formula, L/s
+    float debit = (debitTick / 7.5) * debitConstant / 60.0 / elapsedTime;  
+
     return debit;
 }

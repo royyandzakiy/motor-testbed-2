@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include "PinDefinitions.h"
+#include "FlowSensor.h"
 
 class PumpHandler {
     public:
@@ -11,6 +12,7 @@ class PumpHandler {
         void start();
         void stop();
         void poll();
+        void meassure(float);
 
     private:
         unsigned int dutyCycle;
