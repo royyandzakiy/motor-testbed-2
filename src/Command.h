@@ -2,14 +2,20 @@
 
 #include <Arduino.h>
 #include "Utilities.h"
-#include "DeviceConfig.h"
 #include "Sampler.h"
 #include "DataSaver.h"
+#include "PumpHandler.h"
+#include "esp_task_wdt.h"
+
+extern TaskHandle_t commandTaskHandle;
 
 class Command {
     public:
+        void init();
         void poll();
         void process(const String);
 };
 
-extern Command command;
+extern void samplingStart();
+extern void commandTask(void *);
+extern Command serialCommand;

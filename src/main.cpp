@@ -1,5 +1,4 @@
 #include "Utilities.h"
-#include "DeviceConfig.h"
 #include "Internet/InternetHandler.h"
 #include "Command.h"
 #include "Sampler.h"
@@ -8,33 +7,59 @@
 #include "FlowSensor.h"
 #include "esp_task_wdt.h"
 
-TaskHandle_t commandTaskHandle;
+/**
+ * @brief The default sampling start
+ * to start, input to serial
+ * "samplingStart:" // don't forget the :
+ */ 
+void samplingStart() {
+    // lakukan pembacaan hingga buffer penuh
+    loadcellSampler.set("totalSamplingStopMode", "buffer");
+    loadcellSampler.set("totalSamplingBufferSize", "100");
+    loadcellSampler.start();    
+    delay(5000);
 
-void commandTask(void* pvParameters) {
-    esp_task_wdt_delete(NULL);
-    _PTN("[commandTask] started");
+    // kembali lakukan pembacaan, tetapi hidupkan water pump
+    loadcellSampler.start();
+    pumpOut.start();
+    delay(5000);
 
-    while(1) {
-        command.poll();
-    }
-    vTaskDelete(NULL);
+    /** 
+     * kembali lakukan pembacaan, tetapi hidupkan water pump. cukup lakukan
+     * bagian ini secara manual melalui serial command, 
+     * 
+     * startLc:
+     * setPi:state=start;
+     * 
+     * tetapi kalau mau otomatis, 
+     * tinggal uncomment dibawah ini
+     */
+    // loadcellSampler.start();
+    // pumpIn.start();
 }
 
 // MAIN
 void setup() {
     Serial.begin(115200);
-    esp_task_wdt_init(60, false);
+    esp_task_wdt_init(120, false); // turn of wdt panic, so never restart
     _PTN("=========== LOADCELL:INIT START ===========");
 
-    deviceConfig.init();
     internetHandler.connect();
     mcp4725Handler.init();
-    pumpHandler.init();
-    sampler.init();
-    flowSensor.init();
-    attachInterrupt(FLOWSENSOR_PIN, flowtickIsr, RISING);
+
+    florSensorIn.init(FLOWSENSOR_IN_PIN);
+    florSensorOut.init(FLOWSENSOR_OUT_PIN);
+    attachInterrupt(FLOWSENSOR_IN_PIN, flowInTickIsr, RISING);
+    attachInterrupt(FLOWSENSOR_OUT_PIN, flowOutTickIsr, RISING);
+
+    pumpIn.set("debitTarget", "20.0");
+    pumpIn.init(PUMP_IN_PIN);
+    pumpOut.set("debitTarget", "0.0");
+    pumpOut.init(PUMP_OUT_PIN);
     
-    xTaskCreate(commandTask, "commandTask", 2048, NULL, 2, &commandTaskHandle);
+    loadcellSampler.init();
+    
+    serialCommand.init();
 
     _PTN("=========== LOADCELL:INIT DONE ===========");
 }
