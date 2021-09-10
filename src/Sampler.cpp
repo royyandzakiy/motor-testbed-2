@@ -120,7 +120,7 @@ float* Sampler::avgSampling() {
 #ifdef SAMPLING_PRINT_VERBOSE
     _PTF("    |\n");
     _PTF("    | rawSampleCount: %d\n", rawSampleCount);
-    _PTF("    | time elapsed: %lu us\n", micros() - start);
+    _PTF("    | avgSampling time elapsed: %lu us\n", micros() - start);
 #endif  // SAMPLING_PRINT_VERBOSE
 
     return avgSamples;
@@ -129,7 +129,7 @@ float* Sampler::avgSampling() {
 void samplingTask(void* pvParameters) {
     _PTN("[samplingTask] Start");
     bool stopSampling;
-    unsigned long start = millis();
+    unsigned long start = micros();
     unsigned int avgSampleCount = 0;
 
     // print configuration
@@ -151,7 +151,7 @@ void samplingTask(void* pvParameters) {
         avgSampleCount++;
 
 #ifdef SAMPLING_PRINT_VERBOSE
-        _PTF("    | sampling count: %d\n", avgSampleCount);
+        _PTF("    | avgSamplingCount: %d\n", avgSampleCount);
         for (int i = 0; i < LOADCELL_AMOUNT; i++) {
             _PTF("    | avgSample loadcell[%d]: %.2f\n", i, avgSamples[i]);
         }
@@ -176,7 +176,7 @@ void samplingTask(void* pvParameters) {
 
     _PTF("    | ------ SAMPLING: STOP ------\n");
     _PTF("    | avgSampleCount: %d\n", avgSampleCount);
-    _PTF("    | time elapsed: %lu ms\n", (millis() - start));
+    _PTF("    | total sampling time elapsed: %lu ms\n", (micros() - start)/1000);
 
     _PTN("Sampling process stopped.");
 
@@ -191,7 +191,7 @@ void defaultConfiguration() {
     sampler.set("rawSampleInterval", "0");  // interval from each raw sampling (in microseconds). need to create dynamically, count total sample count, reduce by estimated sisa waktu. default is 0
 
     // --------- AVERAGE SAMPLING ---------
-    sampler.set("avgSampleInterval", "500000");  // in microseconds
+    sampler.set("avgSampleInterval", "5000");  // in microseconds
     sampler.set("avgSamplingStopMode", "buffer");
     sampler.set("avgSamplingBufferSize", "20");        // is buffer size"
     sampler.set("avgSamplingDurationMax", "1000000");  // max raw sampling time is 1 second (in microseconds)
