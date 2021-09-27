@@ -15,40 +15,39 @@
 ## Commands List
 ```
 // General
-AT                  --> sample usage "AT:"
-samplingStartDemo   --> sample usage "samplingStartDemo:"
+AT                  --> usage "AT:"
+samplingStartDemo   --> usage "samplingStartDemo:"
 
 // Loadcell Sampler
-startLs             --> sample usage "startLs:"
-stopLs              --> sample usage "stopLs:"
-stateLs             --> sample usage "stateLs:"
-printLs             --> sample usage "printLs:"
-resetLs             --> sample usage "resetLs:"
-setLs               --> sample usage "setLs:key=value;"
+startLs             --> usage "startLs:"
+stopLs              --> usage "stopLs:"
+stateLs             --> usage "stateLs:"
+printLs             --> usage "printLs:"
+resetLs             --> usage "resetLs:"
+setLs               --> usage "setLs:<key>=<value>;"
 
 // Pump Out
-startPo             --> sample usage "startPo:"
-stopPo              --> sample usage "stopPo:"
-statePo             --> sample usage "statePo:"
-printPo             --> sample usage "printPo:"
-setPo               --> sample usage "setPo:key=value;"
+startPo             --> usage "startPo:"
+stopPo              --> usage "stopPo:"
+statePo             --> usage "statePo:"
+printPo             --> usage "printPo:"
+setPo               --> usage "setPo:<key>=<value>;"
 
 // Pump In
-startPi             --> sample usage "startPi:"
-stopPi              --> sample usage "stopPi:"
-statePi             --> sample usage "statePi:"
-printPi             --> sample usage "printPi:"
-setPi               --> sample usage "setPi:key=value;"
+startPi             --> usage "startPi:"
+stopPi              --> usage "stopPi:"
+statePi             --> usage "statePi:"
+printPi             --> usage "printPi:"
+setPi               --> usage "setPi:<key>=<value>;"
 
 // example inputs
+startPi;
+stopPi;
 setLs:avgSamplingBufferSize=60;
 setLs:totalSamplingStopMode=buffer;
 setLs:totalSamplingBufferSize=100;
 startLs:
 stopLs:
-
-startPo;
-stopPo;
 ```
 
 ## Requirements:
@@ -63,8 +62,8 @@ Opsional:
 
 ## To Develop
 - Code Review
-    - PI implementation
-    - Debit count
+    - Pump: PI implementation
+    - Debit count di flow sudah benar atau belum rumusnya
     - demo doing "samplingStart()"
 - Sampler
     - insert threshold inside sampler as private object
@@ -72,3 +71,7 @@ Opsional:
     - Save to SdCard after every successfull reading
 - Implement Uploader
     - Upload last sampled data
+- Sensor
+    - Implement generic sensor that has state, getNewState
+    - Sampler: Daftarkan loadcell sebagai sensor, agar dynamically jumlahnya ditentukan saat setup
+    - Flow: Implement sebagai sensor
