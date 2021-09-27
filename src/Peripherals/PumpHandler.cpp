@@ -77,7 +77,7 @@ void ledTest() {
 }
 
 void PumpHandler::meassure(float desiredDebit) {
-    error = desiredDebit - florSensorOut.get();
+    error = desiredDebit - flowSensorOut.get();
     errorSum+=error;
     
     float pwmVal = kp * error + ki * errorSum;
