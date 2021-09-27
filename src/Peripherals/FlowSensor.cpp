@@ -1,14 +1,14 @@
 #include "Peripherals/FlowSensor.h"
 
-FlowSensor florSensorOut;
-FlowSensor florSensorIn;
+FlowSensor flowSensorOut;
+FlowSensor flowSensorIn;
 
 void IRAM_ATTR flowOutTickIsr() {
-    florSensorOut.tick();
+    flowSensorOut.tick();
 }
 
 void IRAM_ATTR flowInTickIsr() {
-    florSensorIn.tick();
+    flowSensorIn.tick();
 }
 
 void FlowSensor::init(const char * _name, uint8_t _pin) {

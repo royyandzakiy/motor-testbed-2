@@ -24,5 +24,5 @@ class FlowSensor {
 
 extern void flowOutTickIsr();
 extern void flowInTickIsr();
-extern FlowSensor florSensorOut;
-extern FlowSensor florSensorIn;
+extern FlowSensor flowSensorOut;
+extern FlowSensor flowSensorIn;
