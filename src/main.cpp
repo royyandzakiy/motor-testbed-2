@@ -89,25 +89,25 @@ void samplingStartDemo() {
  */ 
 void setup() {
     Serial.begin(115200);
-    esp_task_wdt_init(120, false);  // turn of wdt panic, so never restart
+    esp_task_wdt_init(120, false);  // turn off wdt panic, so never restart
     _PTN("=========== LOADCELL:INIT START ===========");
 
     internetHandler.connect();
     dacHandler.init();
 
-    florSensorIn.init("florSensorIn", FLOWSENSOR_IN_PIN);
+    flowSensorIn.init("flowSensorIn", FLOWSENSOR_IN_PIN);
     attachInterrupt(FLOWSENSOR_IN_PIN, flowInTickIsr, RISING);
     pumpIn.set("debitTarget", "20.0");
     pumpIn.init("pumpIn", PUMP_IN_PIN);
 
-    florSensorOut.init("florSensorOut", FLOWSENSOR_OUT_PIN);
+    flowSensorOut.init("flowSensorOut", FLOWSENSOR_OUT_PIN);
     attachInterrupt(FLOWSENSOR_OUT_PIN, flowOutTickIsr, RISING);
     pumpOut.set("debitTarget", "0.0");
     pumpOut.init("pumpOut", PUMP_OUT_PIN);
 
     loadcellSampler.init();
 
-    _PTN("=========== LOADCELL:INIT DONE ===========");
+    _PTN("=========== LOADCELL:INIT DONE ==========="); 
 
     serialCommand.init();
 }
