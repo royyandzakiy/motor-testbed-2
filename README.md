@@ -60,18 +60,25 @@ Opsional:
 
 - Bisa lihat kurvanya secara langsung (tanpa perlu post processing lagi ke spreadsheet).
 
+---
+
+## To Do Next:
+- Demonstration + Feedback + Code Review
+- Implement uploader
+- Develop version for meja uji motor: mulai dari sense loadcell+proximity and actuate motor
+
 ## To Develop
 - Code Review
     - Pump: PI implementation
     - Debit count di flow sudah benar atau belum rumusnya
     - demo doing "samplingStart()"
-- Sampler
-    - insert threshold inside sampler as private object
-- Use DataSaver
-    - Save to SdCard after every successfull reading
 - Implement Uploader
     - Upload last sampled data
 - Sensor
     - Implement generic sensor that has state, getNewState
     - Sampler: Daftarkan loadcell sebagai sensor, agar dynamically jumlahnya ditentukan saat setup
     - Flow: Implement sebagai sensor
+- Sampler
+    - insert threshold inside sampler as private object // (?) kok lupa ya ini maksudnya apa
+- Use DataSaver // debatable, jadi perlu di save atau nggak. currenlty no need for data retention, will be done through web interface anyways
+    - Save to SdCard after every successfull reading
