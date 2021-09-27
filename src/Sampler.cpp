@@ -3,7 +3,6 @@
 Sampler loadcellSampler;
 TaskHandle_t samplingTaskHandle;
 
-
 #define SAMPLING_PRINT_VERBOSE
 #define SAMPLING_PRINT_VISUALIZER
 
@@ -31,7 +30,7 @@ bool Sampler::getState() {
     return state;
 }
 
-uint16_t * Sampler::getSensorValues() {
+uint16_t* Sampler::getSensorValues() {
     return sensorValues;
 }
 
@@ -100,10 +99,10 @@ float* Sampler::avgSampling() {
     unsigned long start = micros();
 
     while (!stopSampling) {
-        sensorValues[0] += adc1_get_raw(ADC1_CHANNEL_0); // 36
-        sensorValues[1] += adc1_get_raw(ADC1_CHANNEL_3); // 39
-        sensorValues[2] += adc1_get_raw(ADC1_CHANNEL_6); // 34
-        sensorValues[3] += adc1_get_raw(ADC1_CHANNEL_7); // 35
+        sensorValues[0] += adc1_get_raw(ADC1_CHANNEL_0);  // 36
+        sensorValues[1] += adc1_get_raw(ADC1_CHANNEL_3);  // 39
+        sensorValues[2] += adc1_get_raw(ADC1_CHANNEL_6);  // 34
+        sensorValues[3] += adc1_get_raw(ADC1_CHANNEL_7);  // 35
 
         delayMicroseconds(config.rawSampleInterval);
         rawSampleCount++;
@@ -178,15 +177,17 @@ void samplingTask(void* pvParameters) {
         }
 
         if (stopSampling) {
-            loadcellSampler.state = false;
-            samplingTaskHandle = NULL;
+            // loadcellSampler.state = false;  // ROY: just use stop to make it consistent
+            // samplingTaskHandle = NULL;
+            loadcellSampler.stop();
+        } else {
+            delayMicroseconds(loadcellSampler.config.avgSampleInterval);
         }
-        delayMicroseconds(loadcellSampler.config.avgSampleInterval);
     }
 
     _PTF("    | ------ SAMPLING: STOP ------\n");
     _PTF("    | avgSampleCount: %d\n", avgSampleCount);
-    _PTF("    | total sampling time elapsed: %lu ms\n", (micros() - start)/1000);
+    _PTF("    | total sampling time elapsed: %lu ms\n", (micros() - start) / 1000);
 
     _PTN("Sampling process stopped.");
 
@@ -208,6 +209,6 @@ void defaultConfiguration() {
 
     // --------- TOTAL SAMPLING ---------
     loadcellSampler.set("totalSamplingStopMode", "buffer");
-    loadcellSampler.set("totalSamplingBufferSize", "100");       // is "buffer size"
+    loadcellSampler.set("totalSamplingBufferSize", "100");      // is "buffer size"
     loadcellSampler.set("totalSampleDurationMax", "10000000");  // an alternative to not stop by buffer size, but time (in microseconds)
 }
