@@ -1,13 +1,18 @@
 #include "Sampler.h"
 
-Sampler loadcellSampler;
+Sampler * loadSensorSampler;
 TaskHandle_t samplingTaskHandle;
 
-#define SAMPLING_PRINT_VERBOSE
-#define SAMPLING_PRINT_VISUALIZER
+#include "esp_task_wdt.h"
+
+const int totalSamplingBufferSize = 10;
 
 void Sampler::init() {
     _PTN("[LoadcellSampler::init]");
+    reset();
+}
+
+void Sampler::reset() {
     defaultConfiguration();
 }
 
@@ -22,16 +27,111 @@ void Sampler::start() {
     }
 }
 
-void Sampler::reset() {
-    defaultConfiguration();
+void Sampler::stop() {
+    _PTN("[LoadcellSampler::stop]");
+
+    if (samplingTaskHandle != NULL) {
+        eTaskState taskState = eTaskGetState(samplingTaskHandle);
+        if (taskState != eTaskState::eDeleted && state == true) {
+            state = false;
+            samplingTaskHandle = NULL;
+        } else {
+            _PTN("    | Sampler not running. Do nothing...");
+        }
+    } else {
+        _PTN("    | Sampler not running. Do nothing...");
+    }
 }
 
-bool Sampler::getState() {
-    return state;
+float* Sampler::avgSampling() {
+    _PTN("LoadSensor::avgSampling()");
+
+    // initialize variables
+    bool stopSampling = false;
+    unsigned int rawSampleCount = 0;
+    unsigned long start = micros();
+
+    uint16_t sensorValues = 0;
+
+    while (!stopSampling) {
+        sensorValues += sensor->read();
+
+        delayMicroseconds(config.rawSampleInterval);
+        rawSampleCount++;
+
+        if (strcmp(config.avgSamplingStopMode, "buffer") == 0) {
+            stopSampling = rawSampleCount >= config.avgSamplingBufferSize;  // stop based on buffer size
+        } else if (strcmp(config.avgSamplingStopMode, "duration") == 0) {
+            stopSampling = micros() - start > config.avgSamplingDurationMax;  // stop based on time
+        } else if (strcmp(config.avgSamplingStopMode, "bufferduration") == 0) {
+            stopSampling = rawSampleCount >= config.avgSamplingBufferSize || micros() - start > config.avgSamplingDurationMax;  // stop based on buffer size and time
+        }
+    }
+
+    float* avgSamples = (float*)malloc(sizeof(float));
+
+    avgSamples[0] = (float)(sensorValues / rawSampleCount);
+
+    // #ifdef SAMPLING_PRINT_VERBOSE
+    _PTF("    |\n");
+    _PTF("    | rawSampleCount: %d\n", rawSampleCount);
+    _PTF("    | avgSampling time elapsed: %lu us\n", micros() - start);
+    // #endif  // SAMPLING_PRINT_VERBOSE
+
+    return avgSamples;
 }
 
-uint16_t* Sampler::getSensorValues() {
-    return sensorValues;
+void samplingTask(void* pvParameters) {
+    esp_task_wdt_delete(NULL);
+
+    _PTN("[samplingTask] Start");
+    bool stopSampling;
+    unsigned long start = micros();
+    unsigned int avgSampleCount = 0;
+
+    // print configuration
+    loadSensorSampler->printConfiguration();
+    _PTF("    |\n");
+    _PTF("    | ------ SAMPLING: START ------\n");
+
+    while (loadSensorSampler->state) {
+        float* avgSamples;
+        // avgSamples = loadSensorSampler->sensor->avgSampling();
+        avgSamples = loadSensorSampler->avgSampling();
+
+        avgSampleCount++;
+
+// #ifdef SAMPLING_PRINT_VERBOSE
+        _PTF("    | avgSamplingCount: %d\n", avgSampleCount);
+        for (int i = 0; i < 1; i++) {
+            _PTF("    | avgSample loadcell[%d]: %.2f\n", i, avgSamples[i]);
+        }
+// #elif defined(SAMPLING_PRINT_VISUALIZER)
+        // ...
+// #endif  // SAMPLING_PRINT_VERBOSE
+
+        if (strcmp(loadSensorSampler->config.totalSamplingStopMode, "buffer") == 0) {
+            stopSampling = (avgSampleCount >= loadSensorSampler->config.totalSamplingBufferSize);  // stop based on buffer size
+        } else if (strcmp(loadSensorSampler->config.totalSamplingStopMode, "duration") == 0) {
+            stopSampling = micros() - start > loadSensorSampler->config.totalSampleDurationMax;  // stop based on time
+        } else if (strcmp(loadSensorSampler->config.totalSamplingStopMode, "bufferduration") == 0) {
+            stopSampling = avgSampleCount >= loadSensorSampler->config.totalSamplingBufferSize || micros() - start > loadSensorSampler->config.totalSampleDurationMax;  // stop based on buffer size & time
+        }
+
+        if (stopSampling) {
+            loadSensorSampler->stop();
+        } else {
+            delayMicroseconds(loadSensorSampler->avgSampleInterval);
+        }
+    }
+
+    _PTF("    | ------ SAMPLING: STOP ------\n");
+    _PTF("    | avgSampleCount: %d\n", avgSampleCount);
+    _PTF("    | total sampling time elapsed: %lu ms\n", (micros() - start) / 1000);
+
+    _PTN("Sampling process stopped.");
+
+    vTaskDelete(NULL);
 }
 
 void Sampler::set(const char* _key, const char* _value) {
@@ -56,22 +156,6 @@ void Sampler::set(const char* _key, const char* _value) {
     }
 }
 
-void Sampler::stop() {
-    _PTN("[LoadcellSampler::stop]");
-
-    if (samplingTaskHandle != NULL) {
-        eTaskState taskState = eTaskGetState(samplingTaskHandle);
-        if (taskState != eTaskState::eDeleted && state == true) {
-            state = false;
-            samplingTaskHandle = NULL;
-        } else {
-            _PTN("    | Sampler not running. Do nothing...");
-        }
-    } else {
-        _PTN("    | Sampler not running. Do nothing...");
-    }
-}
-
 void Sampler::printConfiguration() {
     _PTF("    | ------ SAMPLER CONFIGURATION ------\n");
     _PTF("    | \n");
@@ -92,123 +176,21 @@ void Sampler::printConfiguration() {
     _PTF("    | ---------------------------\n");
 }
 
-float* Sampler::avgSampling() {
-    // initialize variables
-    bool stopSampling = false;
-    unsigned int rawSampleCount = 0;
-    unsigned long start = micros();
-
-    while (!stopSampling) {
-        sensorValues[0] += adc1_get_raw(ADC1_CHANNEL_0);  // 36
-        sensorValues[1] += adc1_get_raw(ADC1_CHANNEL_3);  // 39
-        sensorValues[2] += adc1_get_raw(ADC1_CHANNEL_6);  // 34
-        sensorValues[3] += adc1_get_raw(ADC1_CHANNEL_7);  // 35
-
-        delayMicroseconds(config.rawSampleInterval);
-        rawSampleCount++;
-
-        if (strcmp(config.avgSamplingStopMode, "buffer") == 0) {
-            stopSampling = rawSampleCount >= config.avgSamplingBufferSize;  // stop based on buffer size
-        } else if (strcmp(config.avgSamplingStopMode, "duration") == 0) {
-            stopSampling = micros() - start > config.avgSamplingDurationMax;  // stop based on time
-        } else if (strcmp(config.avgSamplingStopMode, "bufferduration") == 0) {
-            stopSampling = rawSampleCount >= config.avgSamplingBufferSize || micros() - start > config.avgSamplingDurationMax;  // stop based on buffer size and time
-        }
-    }
-
-    float* avgSamples = (float*)malloc(sizeof(float) * LOADCELL_AMOUNT);
-
-    for (int i = 0; i < 4; i++) {
-        avgSamples[i] = (float)(sensorValues[i] / rawSampleCount);
-    }
-
-#ifdef SAMPLING_PRINT_VERBOSE
-    _PTF("    |\n");
-    _PTF("    | rawSampleCount: %d\n", rawSampleCount);
-    _PTF("    | avgSampling time elapsed: %lu us\n", micros() - start);
-#endif  // SAMPLING_PRINT_VERBOSE
-
-    return avgSamples;
-}
-
-#include "esp_task_wdt.h"
-
-void samplingTask(void* pvParameters) {
-    esp_task_wdt_delete(NULL);
-
-    _PTN("[samplingTask] Start");
-    bool stopSampling;
-    unsigned long start = micros();
-    unsigned int avgSampleCount = 0;
-
-    // print configuration
-    loadcellSampler.printConfiguration();
-    _PTF("    |\n");
-    _PTF("    | ------ SAMPLING: START ------\n");
-
-    // write new sample data file
-    // add configuration and timestamp
-    // ...
-
-    while (loadcellSampler.state) {
-        float* avgSamples;
-        avgSamples = loadcellSampler.avgSampling();
-
-        // append sample data file
-        // ...
-
-        avgSampleCount++;
-
-#ifdef SAMPLING_PRINT_VERBOSE
-        _PTF("    | avgSamplingCount: %d\n", avgSampleCount);
-        for (int i = 0; i < LOADCELL_AMOUNT; i++) {
-            _PTF("    | avgSample loadcell[%d]: %.2f\n", i, avgSamples[i]);
-        }
-#elif defined(SAMPLING_PRINT_VISUALIZER)
-        // ...
-#endif  // SAMPLING_PRINT_VERBOSE
-
-        if (strcmp(loadcellSampler.config.totalSamplingStopMode, "buffer") == 0) {
-            stopSampling = (avgSampleCount >= loadcellSampler.config.totalSamplingBufferSize);  // stop based on buffer size
-        } else if (strcmp(loadcellSampler.config.totalSamplingStopMode, "duration") == 0) {
-            stopSampling = micros() - start > loadcellSampler.config.totalSampleDurationMax;  // stop based on time
-        } else if (strcmp(loadcellSampler.config.totalSamplingStopMode, "bufferduration") == 0) {
-            stopSampling = avgSampleCount >= loadcellSampler.config.totalSamplingBufferSize || micros() - start > loadcellSampler.config.totalSampleDurationMax;  // stop based on buffer size & time
-        }
-
-        if (stopSampling) {
-            // loadcellSampler.state = false;  // ROY: just use stop to make it consistent
-            // samplingTaskHandle = NULL;
-            loadcellSampler.stop();
-        } else {
-            delayMicroseconds(loadcellSampler.config.avgSampleInterval);
-        }
-    }
-
-    _PTF("    | ------ SAMPLING: STOP ------\n");
-    _PTF("    | avgSampleCount: %d\n", avgSampleCount);
-    _PTF("    | total sampling time elapsed: %lu ms\n", (micros() - start) / 1000);
-
-    _PTN("Sampling process stopped.");
-
-    vTaskDelete(NULL);
-}
-
 void defaultConfiguration() {
     /**
      * --------- SAMPLING CONFIGURATIONS ---------
      */
     // --------- RAW SAMLING ---------
-    loadcellSampler.set("rawSampleInterval", "0");  // interval from each raw sampling (in microseconds). need to create dynamically, count total sample count, reduce by estimated sisa waktu. default is 0
+    loadSensorSampler->set("rawSampleInterval", "0");  // interval from each raw sampling (in microseconds). need to create dynamically, count total sample count, reduce by estimated sisa waktu. default is 0
 
     // --------- AVERAGE SAMPLING ---------
-    loadcellSampler.set("avgSampleInterval", "0");  // in microseconds
-    loadcellSampler.set("avgSamplingStopMode", "buffer");
-    loadcellSampler.set("avgSamplingBufferSize", "60");        // is buffer size"
-    loadcellSampler.set("avgSamplingDurationMax", "1000000");  // max raw sampling time is 1 second (in microseconds)
+    loadSensorSampler->set("avgSampleInterval", "0");  // in microseconds
+    loadSensorSampler->set("avgSamplingStopMode", "buffer");
+    loadSensorSampler->set("avgSamplingBufferSize", "10");        // is buffer size
+    loadSensorSampler->set("avgSamplingDurationMax", "1000000");  // max raw sampling time is 1 second (in microseconds)
 
     // --------- TOTAL SAMPLING ---------
-    loadcellSampler.set("totalSamplingStopMode", "buffer");
-    loadcellSampler.set("totalSamplingBufferSize", "100");      // is "buffer size"
-    loadcellSampler.set("totalSampleDurationMax", "10000000");  // an alternative to not stop by buffer size, but time (in microseconds)
+    loadSensorSampler->set("totalSamplingStopMode", "buffer");
+    loadSensorSampler->set("totalSamplingBufferSize", "10");      // is "buffer size"
+    loadSensorSampler->set("totalSampleDurationMax", "10000000");  // an alternative to not stop by buffer size, but time (in microseconds)
 }

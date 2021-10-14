@@ -12,6 +12,9 @@
 ## How to Use
 - Setelah muncul tulisan "[commandTask] started", bisa mulai memberikan input ke Serial Monitor
 
+## Flow
+- input volt motor dc
+
 ## Commands List
 ```
 // General
@@ -63,22 +66,14 @@ Opsional:
 ---
 
 ## To Do Next:
-- Demonstration + Feedback + Code Review
-- Implement uploader
-- Develop version for meja uji motor: mulai dari sense loadcell+proximity and actuate motor
 
 ## To Develop
-- Code Review
-    - Pump: PI implementation
-    - Debit count di flow sudah benar atau belum rumusnya
-    - demo doing "samplingStart()"
-- Implement Uploader
-    - Upload last sampled data
-- Sensor
-    - Implement generic sensor that has state, getNewState
-    - Sampler: Daftarkan loadcell sebagai sensor, agar dynamically jumlahnya ditentukan saat setup
-    - Flow: Implement sebagai sensor
-- Sampler
-    - insert threshold inside sampler as private object // (?) kok lupa ya ini maksudnya apa
-- Use DataSaver // debatable, jadi perlu di save atau nggak. currenlty no need for data retention, will be done through web interface anyways
-    - Save to SdCard after every successfull reading
+- Sampler: Remove load cell logic from inside, use dependency injection for load cell logic
+    - Use for all other sensors
+v Sensor: create sensor generic class
+v SensorTask: create loadsensor task
+v implement config, test
+v change Sensor and Sampler to accomodate deviceConfig
+v move name to sensor, not sampler
+- implement serialCommand
+- implement global, to add macro for printing type
